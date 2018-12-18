@@ -1,6 +1,6 @@
 # Festive Jokes via SMS
 
-[![Remix on Glitch](https://cdn.glitch.com/2703baf2-b643-4da7-ab91-7ee2a2d00b5b%2Fremix-button.svg)](https://glitch.com/edit/#!/remix/nexmo-community-xmas-jokes-nodejs)
+[![Remix on Glitch](https://cdn.glitch.com/2703baf2-b643-4da7-ab91-7ee2a2d00b5b%2Fremix-button.svg)](https://glitch.com/edit/#!/remix/nexmo-community-xmas-jokes-nodejs) [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
 In this tutorial I'll show you how to build your own awkward silence breaker, in the form of an SMS app that will reply to you with terrible festive jokes and one-liners that you can throw out to the table, quickly breaking the tension.
 
