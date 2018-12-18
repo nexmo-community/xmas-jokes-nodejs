@@ -39,7 +39,7 @@ const reply = async (number, text) => {
     if (lowerText === 'awkward' || lowerText === 'more') {
       nexmo.channel.send(
         { type: 'sms', number: number },
-        { type: 'sms', number: selectReplyNumber() },
+        { type: 'sms', number: selectReplyNumber(number) },
         {
           content: {
             type: 'text',
