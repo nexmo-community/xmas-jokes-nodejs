@@ -30,45 +30,47 @@ const nexmo = new Nexmo({
   privateKey: NEXMO_APPLICATION_PRIVATE_KEY
 });
 
-const reply = async (number, cb) => {
+const reply = async (number, text, cb) => {
+  const lowerText = text.toLowerCase();
+
   const joke = () => {
     let rand = Math.floor(Math.random() * jokes.length);
     return jokes[rand].line;
   };
-  nexmo.channel.send(
-    { type: 'sms', number: number },
-    { type: 'sms', number: NEXMO_FROM_NUMBER },
-    {
-      content: {
-        type: 'text',
-        text: 'Quick, say this: ' + joke()
+
+  if (lowerText === 'awkward' || lowerText === 'more') {
+    nexmo.channel.send(
+      { type: 'sms', number: number },
+      { type: 'sms', number: NEXMO_FROM_NUMBER },
+      {
+        content: {
+          type: 'text',
+          text: 'Quick, say this: ' + joke()
+        }
+      },
+      (err, data) => {
+        if (data) {
+          cb({ sent: true, data });
+        } else {
+          cb({ sent: false, err });
+        }
       }
-    },
-    (err, data) => {
-      if (data) {
-        cb({ sent: true, data });
-      } else {
-        cb({ sent: false, err });
-      }
-    }
-  );
+    );
+  } else {
+    cb({ sent: false, err });
+  }
 };
 
 router.post('/inbound', async ctx => {
   const { msisdn, text } = await ctx.request.body;
-  lowerText = text.toLowerCase();
-  if (lowerText === 'awkward' || lowerText === 'more') {
-    reply(msisdn, response => {
-      response.sent
-        ? console.log('Message sent')
-        : console.log('Message not sent');
-    });
-    ctx.status = 200;
-  } else {
-    console.log('Message not sent');
-    //ctx.status = 200;
-  }
-  //ctx.status = 200;
+
+  reply(msisdn, text, response => {
+    response.sent
+      ? console.log('Message sent')
+      : console.log('Message not sent');
+  });
+
+  ctx.status = 200;
 });
 
 router.post('/status', async ctx => {
