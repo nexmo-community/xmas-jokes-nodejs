@@ -3,64 +3,68 @@ const Router = require('koa-router');
 const Nexmo = require('nexmo');
 const bodyParser = require('koa-bodyparser');
 const PORT = process.env.PORT || 3000;
-const dev = process.env.NODE_ENV !== 'production';
 const jokes = require('./src/jokes');
-
-if (dev) {
-  require('dotenv').config();
-}
 
 const app = new Koa();
 const router = new Router();
 
 app.use(bodyParser());
 
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
 const nexmo = new Nexmo({
   apiKey: process.env.NEXMO_API_KEY,
-  apiSecret: process.env.EXMO_API_SECRET,
+  apiSecret: process.env.NEXMO_API_SECRET,
   applicationId: process.env.NEXMO_APPLICATION_ID,
   privateKey: process.env.NEXMO_APPLICATION_PRIVATE_KEY
 });
 
-const reply = async (number, text, cb) => {
+const reply = async (number, text) => {
   const lowerText = text.toLowerCase();
 
   const joke = () => {
     let rand = Math.floor(Math.random() * jokes.length);
     return jokes[rand].line;
   };
-
-  if (lowerText === 'awkward' || lowerText === 'more') {
-    nexmo.channel.send(
-      { type: 'sms', number: number },
-      { type: 'sms', number: process.env.NEXMO_FROM_NUMBER },
-      {
-        content: {
-          type: 'text',
-          text: 'Quick, say this: ' + joke()
+  return new Promise((resolve, reject) => {
+    if (lowerText === 'awkward' || lowerText === 'more') {
+      nexmo.channel.send(
+        { type: 'sms', number: number },
+        { type: 'sms', number: process.env.NEXMO_FROM_NUMBER },
+        {
+          content: {
+            type: 'text',
+            text: 'Quick, say this: ' + joke()
+          }
+        },
+        (error, data) => {
+          if (data) {
+            resolve({ sent: true, detail: data });
+          } else {
+            reject({ sent: false, detail: error });
+          }
         }
-      },
-      (err, data) => {
-        if (data) {
-          cb({ sent: true, data });
-        } else {
-          cb({ sent: false, err });
-        }
-      }
-    );
-  } else {
-    cb({ sent: false, err });
-  }
+      );
+    } else {
+      reject({ sent: false, detail: 'Keyword unknown' });
+    }
+  });
 };
 
 router.post('/inbound', async ctx => {
   const { msisdn, text } = await ctx.request.body;
 
-  reply(msisdn, text, response => {
-    response.sent
-      ? console.log('Message sent')
-      : console.log('Message not sent');
-  });
+  reply(msisdn, text)
+    .then(res => {
+      console.log(res);
+      ctx.status = 200;
+    })
+    .catch(err => {
+      console.log(err);
+      ctx.status = 200;
+    });
 
   ctx.status = 200;
 });
