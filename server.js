@@ -28,11 +28,18 @@ const reply = async (number, text) => {
     let rand = Math.floor(Math.random() * jokes.length);
     return jokes[rand].line;
   };
+
+  const selectReplyNumber = number => {
+    return number.charAt(0) === '1'
+      ? process.env.NEXMO_FROM_NUMBER_US
+      : process.env.NEXMO_FROM_NUMBER;
+  };
+
   return new Promise((resolve, reject) => {
     if (lowerText === 'awkward' || lowerText === 'more') {
       nexmo.channel.send(
         { type: 'sms', number: number },
-        { type: 'sms', number: process.env.NEXMO_FROM_NUMBER },
+        { type: 'sms', number: selectReplyNumber() },
         {
           content: {
             type: 'text',
