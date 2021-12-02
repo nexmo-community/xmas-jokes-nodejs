@@ -1,6 +1,6 @@
 const Koa = require('koa');
 const Router = require('koa-router');
-const Nexmo = require('nexmo');
+const Vonage = require('@vonage/server-sdk')
 const bodyParser = require('koa-bodyparser');
 const PORT = process.env.PORT || 3000;
 const jokes = require('./src/jokes');
@@ -14,12 +14,12 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config();
 }
 
-const nexmo = new Nexmo({
-  apiKey: process.env.NEXMO_API_KEY,
-  apiSecret: process.env.NEXMO_API_SECRET,
-  applicationId: process.env.NEXMO_APPLICATION_ID,
-  privateKey: process.env.NEXMO_APPLICATION_PRIVATE_KEY
-});
+const vonage = new Vonage({
+  apiKey: process.env.VONAGE_API_KEY,
+  apiSecret: process.env.VONAGEAPI_SECRET,
+  applicationId: process.env.VONAGEAPPLICATION_ID,
+  privateKey: process.env.VONAGE_APPLICATION_PRIVATE_KEY
+})
 
 const reply = async (number, text) => {
   const lowerText = text.toLowerCase();
@@ -31,30 +31,24 @@ const reply = async (number, text) => {
 
   const selectReplyNumber = number => {
     return number.charAt(0) === '1'
-      ? process.env.NEXMO_FROM_NUMBER_US
-      : process.env.NEXMO_FROM_NUMBER;
+      ? process.env.VONAGE_FROM_NUMBER_US
+      : process.env.VONAGE_FROM_NUMBER;
   };
 
   return new Promise((resolve, reject) => {
     if (lowerText === 'awkward' || lowerText === 'more') {
-      nexmo.channel.send(
-        { type: 'sms', number: number },
-        { type: 'sms', number: selectReplyNumber(number) },
-        {
-          content: {
-            type: 'text',
-            text: 'Quick, say this: ' + joke()
-          }
-        },
-        (error, data) => {
-          if (data) {
-            resolve({ sent: true, detail: data });
-          } else {
-            reject({ sent: false, detail: error });
-          }
-        }
-      );
+      vonage.message.sendSms(process.env.VONAGE_FROM_NUMBER, to, joke(), (err, responseData) => {
+    if (err) {
+        console.log(err);
     } else {
+        if(responseData.messages[0]['status'] === "0") {
+            console.log("Message sent successfully.");
+        } else {
+            console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+        }
+    }
+})
+      else {
       reject({ sent: false, detail: 'Keyword unknown' });
     }
   });
